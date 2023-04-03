@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stedi-rachellofgran-dev
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stedi-rachellofgran-dev
+  template:
+    metadata:
+      labels:
+        app: stedi-rachellofgran-dev
+    spec:
+      containers:
+        - name: stedi-rachellofgran-dev
+          image: gcr.io/bestteam362/rachel-stedi-api
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secrets-rachel
+                  key: REDIS_PASSWORD
+            - name: REDIS_HOST
+              value: "redis-stedi-prod"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_DB
+              value: "0"
+            - name: KAFKA_BROKER
+              value: "localhost:9092"
+          ports:
+            - containerPort: 443
+          resources:
+            limits:
+              cpu: ".5"
+              memory: "500Mi"
+            requests:
+              cpu: ".25"
+              memory: "250Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 4567
+            initialDelaySeconds: 3
+            periodSeconds: 3
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: stedi-rachellofgran-dev-service
+# spec:
+#   selector:
+#     app: stedi-rachellofgran-dev-service
+#   ports:
+#     - protocol: TCP
+#       port: 80
+#       targetPort: 4567
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: setdi-rachellofgran-dev-nodeport
+# spec:
+apiVersion: v1 
+kind: Service 
+metadata: 
+  name: stedi-rachellofgran-dev
+spec: 
+  selector: 
+    app: stedi-rachellofgran-dev 
+  type: NodePort 
+  ports:
+    - port: 80 
+      targetPort: 4567
+# ---
+apiVersion: networking.gke.io/v1 
+kind: ManagedCertificate 
+metadata: 
+  name: stedi-rachellofgran-certificate 
+spec: 
+  domains: 
+  - rachellofgran.cit262.com
+#---
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata: 
+  name: stedi-rachellofgran-dev
+  annotations: 
+  # gcloud compute addresses list 
+    kubernetes.io/ingress.global-static-ip-name: stedi-rachel-public
+  # needs to match the name of the managed certificate 
+    networking.gke.io/managed-certificates: stedi-rachellofgran-certificate 
+spec: 
+  rules: 
+  - http: 
+      paths: 
+      - path: / 
+        pathType: Prefix 
+        backend: 
+          service: 
+          # needs to match the name of the NodePort service 
+            name: stedi-rachellofgran-dev 
+            port: 
+              number: 80 

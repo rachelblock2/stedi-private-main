@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-stedi-rachel
+spec:
+  selector:
+    matchLabels:
+      app: redis-stedi-rachel
+  serviceName: redis-stedi-rachel
+  replicas:
+  template:
+    metadata:
+      labels:
+        app: redis-stedi-rachel
+    spec:
+      containers:
+        - name: redis-stedi-rachel
+          image: redis:7.0.5-alpine
+          imagePullPolicy: Always
+          args: ["--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes", "--save", "900", "1", "--save", "30", "2"]
+          ports:
+            - containerPort: 6379
+              name: redis
+          env:
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: redis-secrets-rachel
+                key: REDIS_PASSWORD
+          volumeMounts:
+            - name: redis-rachel-volume
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-rachel-volume
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources: 
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-stedi-rachel
+spec:
+  ports:
+    - port: 6379
+      name: redis
+  clusterIP: None
+  selector:
+    app: redis-stedi-rachel
+            
