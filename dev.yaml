@@ -44,7 +44,7 @@ spec:
               port: 4567
             initialDelaySeconds: 3
             periodSeconds: 3
-# ---
+---
 # apiVersion: v1
 # kind: Service
 # metadata:
@@ -73,7 +73,7 @@ spec:
   ports:
     - port: 80 
       targetPort: 4567
-# ---
+---
 apiVersion: networking.gke.io/v1 
 kind: ManagedCertificate 
 metadata: 
